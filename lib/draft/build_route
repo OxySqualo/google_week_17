@@ -1,0 +1,133 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_week_17/draft/main.dart';
+
+import 'package:location/location.dart';
+
+Location location = Location();
+const googleApiKey = "AIzaSyC1nlMkqsn-YpfQPK4RL6mDw-RBvrotquQ";
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("List of coordinates"),
+          centerTitle: true,
+        ),
+        body: ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemCount: mylat?.length ?? 0,
+            separatorBuilder: (BuildContext context, int index) => Divider(),
+            itemBuilder: (_, int index) {
+              return Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      height: 40,
+                      // color: Colors.amber,
+                      child: Text(
+                        mylat?[index] ?? '',
+                        style: const TextStyle(fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      height: 40,
+
+                      // color: Colors.amber,
+                      child: Text(
+                        mylong?[index] ?? '',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      tooltip: 'delete',
+                      onPressed: () {
+                        mylat?.removeAt(index);
+                        mylong?.removeAt(index);
+                        setState(() {});
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.elderly_woman,
+                      ),
+                      tooltip: 'built a way',
+                      onPressed: () {
+                        //Дописать функцию для построения маршрута
+                        // как достать метод из другого клас
+                        setState(() {
+                          Navigator.pushNamed(context, '/work');
+                          _addMarkerForRoute;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }),
+        floatingActionButton: FloatingActionButton(
+            child: const Text('Map'),
+            onPressed: () {
+              Navigator.pushNamed(context, '/work');
+              setState(() {});
+            }));
+  }
+
+  void _addMarkerForRoute(LatLng position) async {
+    if (markers.isEmpty) {
+      markers.add(Marker(
+          markerId: const MarkerId("start"),
+          infoWindow: const InfoWindow(title: "Start"),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          position: position));
+    } else {
+      markers.add(Marker(
+          markerId: const MarkerId("finish"),
+          infoWindow: const InfoWindow(title: "Finish"),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          position: position));
+      final points = PolylinePoints();
+      final start = PointLatLng(
+          markers.first.position.latitude, markers.first.position.longitude);
+      final finish = PointLatLng(
+          markers.last.position.latitude, markers.last.position.longitude);
+
+      final result = await points.getRouteBetweenCoordinates(
+          googleApiKey, start, finish,
+          optimizeWaypoints: true);
+      polylineCoordinates.clear();
+      if (result.points.isNotEmpty) {
+        result.points.forEach((point) {
+          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+        });
+      }
+      _addPolyLine();
+    }
+    setState(() {});
+  }
+
+  _addPolyLine() {
+    PolylineId id = const PolylineId("poly");
+    Polyline polyline = Polyline(
+        polylineId: id, color: Colors.red, points: polylineCoordinates);
+    polylines[id] = polyline;
+    setState(() {});
+  }
+}
