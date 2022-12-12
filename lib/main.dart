@@ -4,7 +4,7 @@ import 'package:google_week_17/home_page.dart';
 
 import 'package:google_week_17/work_page.dart';
 
-const googleApiKey = "AIzaSyC1nlMkqsn-YpfQPK4RL6mDw-RBvrotquQ";
+const googleApiKey = "";
 void main() {
   runApp(const MyApp());
 }
